@@ -45,7 +45,7 @@ idpentryurl = 'https://adfs.stthomas.edu/adfs/ls/IdpInitiatedSignOn.aspx?loginTo
 
 ##########################################################################
 
-def login(username, table='product'):
+def login(username: ("Your user-principal-name", 'option', 'u')='tjsullivan1@stthomas.edu',profile: ("The name of the profile we want to put it the credential file", 'option', 'p')='saml',region: ("The AWS region", 'option', 'r')='us-east-2'):
     """login function"""
     # Get the federated credentials from the user
     password = getpass.getpass()
@@ -217,10 +217,10 @@ def login(username, table='product'):
 
     # Give the user some basic info as to what has just happened
     print('\n\n----------------------------------------------------------------')
-    print('Your new access key pair has been stored in the AWS configuration file {0} under the saml profile.'.format(filename))
+    print('Your new access key pair has been stored in the AWS configuration file {0} under the {1} profile.'.format(filename, profile))
     print('Note that it will expire at {0}.'.format(saml_expiration))
     print('After this time, you may safely rerun this script to refresh your access key pair.')
-    print('If you specified a credential other than default, to use this credential, call the AWS CLI with the --profile option (e.g. aws --profile saml ec2 describe-instances).')
+    print('If you specified a credential other than default, to use this credential, call the AWS CLI with the --profile option (e.g. aws --profile {0} ec2 describe-instances).'.format(profile))
     print('----------------------------------------------------------------\n\n')
 
 plac.call(login)
