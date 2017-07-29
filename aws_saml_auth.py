@@ -18,13 +18,6 @@ from os.path import expanduser
 ##########################################################################
 # Variables
 
-# the profile name to put the authentication parameter under it (previously saml)
-profile='saml'
-
-# region: The default AWS region that this script will connect
-# to for all API calls
-region = 'us-east-1'
-
 # output format: The AWS CLI output format that will be configured in the
 # saml profile (affects subsequent CLI calls)
 outputformat = 'json'
@@ -45,12 +38,11 @@ idpentryurl = 'https://adfs.stthomas.edu/adfs/ls/IdpInitiatedSignOn.aspx?loginTo
 
 ##########################################################################
 
-def login(username: ("Your user-principal-name", 'option', 'u')='tjsullivan1@stthomas.edu',profile: ("The name of the profile we want to put it the credential file", 'option', 'p')='saml',region: ("The AWS region", 'option', 'r')='us-east-2'):
+def login(username: ("Your user-principal-name", 'option', 'u'),profile: ("The name of the profile we want to put it the credential file", 'option', 'p')='saml',region: ("The AWS region", 'option', 'r')='us-east-2'):
     """login function"""
     # Get the federated credentials from the user
-    #### TJS 20170728 -- Consider adding an if check, so that I don't
-    #### need to have my credentials in the default, and then people at
-    #### work will be happier.
+    if not username:
+        username = input()
     password = getpass.getpass()
     print("")
 
