@@ -38,7 +38,7 @@ idpentryurl = 'https://adfs.stthomas.edu/adfs/ls/IdpInitiatedSignOn.aspx?loginTo
 
 ##########################################################################
 
-def login(username: ("Your user-principal-name", 'option', 'u'),profile: ("The name of the profile we want to put it the credential file", 'option', 'p')='saml',region: ("The AWS region", 'option', 'r')='us-east-2'):
+def login(username: ("Your user-principal-name", 'option', 'u'),profile: ("The name of the profile we want to put it the credential file", 'option', 'p')='default',region: ("The AWS region", 'option', 'r')='us-east-2'):
     """login function"""
     # Get the federated credentials from the user
     # If username was not passed as a parameter, we know to ask for it...
