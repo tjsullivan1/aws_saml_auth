@@ -1,0 +1,50 @@
+# Directories to exclude
+log/
+logs/
+tmp/
+temp/
+backup/
+setup/*
+.terraform
+
+# Wildcard files
+*.tmp
+*.bak
+*.swp
+*.key
+*.log
+*.pyc
+*.pyo
+*.exe
+*.dll
+*.obj
+*.o
+*.a
+*.lib
+*.so
+*.dylib
+*.ncb
+*.sdf
+*.suo
+*.pdb
+*.idb
+*.class
+*.psd
+*.db
+*.zip
+*.srl
+*.crt
+*.csr
+*.pub
+*.pem
+*.sublime-workspace
+*tfstate*
+*.plan
+
+# Other files
+account.json
+crash.log
+
+## System generated files
+.DS_Store
+
