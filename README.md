@@ -1,11 +1,11 @@
 # AWS SAML Auth Python Script
 > This will connect to an ADFS IDP to generate a SAML credential for AWS CLI usage.
 
-This script will connect to an ADFS Identity Provider and will allow you to select which role you want to assume using SAML. It will list all accounts and roles that you have access to through your identity provider. For more information on how this was built, see this [my blog](https://tjsullivan1.github.io/blog/2017/05/04/saml-for-aws-2) and the [AWS Security Blog](https://aws.amazon.com/blogs/security/how-to-implement-a-general-solution-for-federated-apicli-access-using-saml-2-0/).
+This script will connect to an ADFS Identity Provider and will allow you to select which role you want to assume using SAML. It will list all accounts and roles that you have access to through your identity provider. For more information on how this was built, see [my blog](https://tjsullivan1.github.io/blog/2017/05/04/saml-for-aws-2) and the [AWS Security Blog](https://aws.amazon.com/blogs/security/how-to-implement-a-general-solution-for-federated-apicli-access-using-saml-2-0/).
 
 ## Installation
 
-Run a command line\shell as administrator that has pip in the path.
+Run a command line/shell as administrator that has pip in the path.
 ```
 pip install boto3 bs4 awscli requests configparser lxml plac
 ```
@@ -14,7 +14,12 @@ Download the script and invoke by running `py aws_saml_auth.py`.
 
 ## Usage example
 
+### Base Usage
 Run `py aws_saml_auth.py`.
+
+### Advanced Usage To Convert to Friendly Names
+Create a file that contains a comma separated list with 'AWS Account ID','Name You Remember' (e.g., '012345678901','Prod')
+Run `py aws_saml_auth.py -f account_ids.txt`
 
 ## Development setup
 
@@ -24,6 +29,8 @@ N/A for now.
 
 * 1.0.0
     * Initial GitHub relase. Works with several parameters.
+* 1.1.0
+    * Added function to ingest an id file and convert the mapping into friendly names.
 
 ## Meta
 
