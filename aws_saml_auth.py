@@ -34,11 +34,62 @@ sslverification = True
 idpentryurl = 'https://adfs.stthomas.edu/adfs/ls/IdpInitiatedSignOn.aspx?loginToRp=urn:amazon:webservices'
 
 # Uncomment to enable low level debugging
-#logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(filename='aws_saml_auth.log', level=logging.DEBUG,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 ##########################################################################
 
-def login(username: ("Your user-principal-name", 'option', 'u'),profile: ("The name of the profile we want to put it the credential file", 'option', 'p')='default',region: ("The AWS region", 'option', 'r')='us-east-2'):
+
+def make_friendly_name(saml_role_response, account_name, account_id):
+    """Replace the AWS friendly format with user friendly format
+    Example:
+    Convert arn:aws:iam::012345678901:role/Admin to Prod/Admin
+    make_friendly_name('arn:aws:iam::012345678901:role/Admin', 'Prod', '012345678901')
+
+    Keyword arguments:
+    saml_role_response -- This is an AWS friendly role name, e.g. arn:aws:iam::012345678901:role/Admin
+    account_name       -- This is the user friendly name for the account, e.g. "Prod"
+    account_id         -- The AWS account id 012345678901
+    """
+    saml_role_response = re.sub(account_id, account_name, saml_role_response).replace(
+        'arn:aws:iam::', '').replace(':role', '')
+    return saml_role_response
+
+
+def return_friendly_name_from_file(saml_role_response, filename):
+    """Replace the AWS friendly format with user friendly format, using file map
+    Example:
+    Convert arn:aws:iam::012345678901:role/Admin to Prod/Admin
+    return_friendly_name_from_file('arn:aws:iam::012345678901:role/Admin', 'account_ids.txt')
+
+    Keyword arguments:
+    saml_role_response -- This is an AWS friendly role name, e.g. arn:aws:iam::012345678901:role/Admin
+    filename           -- This is the name of a file that contains comma separated values, e.g. account_ids.txt
+    """
+    tmp_account_id = re.sub(
+        r'\/.*', '', saml_role_response).replace('arn:aws:iam::', '').replace(':role', '')
+    if os.path.exists(filename):
+        with open(filename, 'r') as account_file:
+            found = False
+            for line in account_file:
+                if re.search(tmp_account_id, line):
+                    good_line = line
+                    found = True
+            if found:
+                account_id, account_name = good_line.rstrip().split(',')
+                if account_id in saml_role_response:
+                    return make_friendly_name(saml_role_response, account_name, account_id)
+            else:
+                return saml_role_response
+    else:
+        return saml_role_response
+
+
+def login(username: ("Your user-principal-name", 'option', 'u'),
+          profile: ("The name of the profile we want to put it the credential file", 'option', 'p')='default',
+          region: ("The AWS region", 'option', 'r')='us-east-2',
+          filename: ("The filename that contains a comma separated mapping of account ids to friendly names",
+                     'option', 'f')='account_ids.txt'):
     """login function"""
     # Get the federated credentials from the user
     # If username was not passed as a parameter, we know to ask for it...
@@ -47,6 +98,7 @@ def login(username: ("Your user-principal-name", 'option', 'u'),profile: ("The n
         username = input()
     password = getpass.getpass()
     print("")
+    logging.debug('Captured user credentials.')
 
     # Initiate session handler
     session = requests.Session()
@@ -64,24 +116,24 @@ def login(username: ("Your user-principal-name", 'option', 'u'),profile: ("The n
     payload = {}
 
     for inputtag in formsoup.find_all(re.compile('(INPUT|input)')):
-        name = inputtag.get('name','')
-        value = inputtag.get('value','')
+        name = inputtag.get('name', '')
+        value = inputtag.get('value', '')
         if "user" in name.lower():
-            #Make an educated guess that this is the right field for the username
+            # Make an educated guess that this is the right field for the username
             payload[name] = username
         elif "email" in name.lower():
-            #Some IdPs also label the username field as 'email'
+            # Some IdPs also label the username field as 'email'
             payload[name] = username
         elif "pass" in name.lower():
-            #Make an educated guess that this is the right field for the password
+            # Make an educated guess that this is the right field for the password
             payload[name] = password
         else:
-            #Simply populate the parameter with the existing value (picks up hidden fields in the login form)
+            # Simply populate the parameter with the existing value (picks up hidden fields in the login form)
             payload[name] = value
 
     # Debug the parameter payload if needed
-    # Use with caution since this will print sensitive output to the screen
-    #print payload
+    # Use with caution since this will print sensitive output to the log file
+    # logging.debug(payload)
 
     # Some IdPs don't explicitly set a form action, but if one is set we should
     # build the idpauthformsubmiturl by combining the scheme and hostname
@@ -116,17 +168,17 @@ def login(username: ("Your user-principal-name", 'option', 'u'),profile: ("The n
     # analyzing the debug print lines above)
     for inputtag in soup.find_all('input'):
         if(inputtag.get('name') == 'SAMLResponse'):
-            #print(inputtag.get('value'))
+            # print(inputtag.get('value'))
             assertion = inputtag.get('value')
 
     # Better error handling is required for production use.
     if (assertion == ''):
-        #TODO: Insert valid error checking/handling
+        # TODO: Insert valid error checking/handling
         print("Response did not contain a valid SAML assertion")
         sys.exit(0)
 
     # Debug only
-    # print(base64.b64decode(assertion))
+    logging.debug(base64.b64decode(assertion))
 
     # Parse the returned assertion and extract the authorized roles
     awsroles = []
@@ -147,6 +199,8 @@ def login(username: ("Your user-principal-name", 'option', 'u'),profile: ("The n
             awsroles.insert(index, newawsrole)
             awsroles.remove(awsrole)
 
+    logging.debug(awsroles)
+
     # If I have more than one role, ask the user which one they want,
     # otherwise just proceed
     print("")
@@ -154,7 +208,9 @@ def login(username: ("Your user-principal-name", 'option', 'u'),profile: ("The n
         i = 0
         print("Please choose the role you would like to assume:")
         for awsrole in awsroles:
-            print('[', i, ']: ', awsrole.split(',')[0])
+            current_role = return_friendly_name_from_file(
+                awsrole.split(',')[0], filename)
+            print('[', i, ']: ', current_role)
             i += 1
         print("Selection: ", end="")
         selectedroleindex = input()
@@ -172,31 +228,29 @@ def login(username: ("Your user-principal-name", 'option', 'u'),profile: ("The n
 
     # Use the assertion to get an AWS STS token using Assume Role with SAML
     conn = boto3.client('sts')
-    token = conn.assume_role_with_saml(RoleArn=role_arn, PrincipalArn=principal_arn, SAMLAssertion=assertion)
+    token = conn.assume_role_with_saml(
+        RoleArn=role_arn, PrincipalArn=principal_arn, SAMLAssertion=assertion)
 
     # Write the AWS STS token into the AWS credential file
     os_home = '~'
     home = expanduser(os_home)
     filepath = os.path.join(home, awsconfigfile)
-    filename = os.path.normpath(filepath)
-
+    credential_filename = os.path.normpath(filepath)
 
     # Read in the existing config file
     config = configparser.RawConfigParser()
-    config.read(filename)
+    config.read(credential_filename)
 
     # Put the credentials into a saml specific section instead of clobbering
     # the default credentials
     if not config.has_section(profile):
         config.add_section(profile)
 
-
     # boto3 outputs a dict that doesn't work with the AWS original script
     saml_access_key = token[u'Credentials'][u'AccessKeyId']
     saml_secret_key = token[u'Credentials'][u'SecretAccessKey']
     saml_session_token = token[u'Credentials'][u'SessionToken']
     saml_expiration = token[u'Credentials'][u'Expiration']
-
 
     config.set(profile, 'output', outputformat)
     config.set(profile, 'region', region)
@@ -205,19 +259,20 @@ def login(username: ("Your user-principal-name", 'option', 'u'),profile: ("The n
     config.set(profile, 'aws_session_token', saml_session_token)
 
     # Write the updated config file, but create it if it doesn't exist!
-    if not os.path.isdir(os.path.dirname(filename)):
-        os.makedirs(os.path.dirname(filename))
+    if not os.path.isdir(os.path.dirname(credential_filename)):
+        os.makedirs(os.path.dirname(credential_filename))
 
-    mode = 'w+' if os.path.exists(filename) else 'w'
-    with open(filename, mode) as configfile:
+    mode = 'w+' if os.path.exists(credential_filename) else 'w'
+    with open(credential_filename, mode) as configfile:
         config.write(configfile)
 
     # Give the user some basic info as to what has just happened
     print('\n\n----------------------------------------------------------------')
-    print('Your new access key pair has been stored in the AWS configuration file {0} under the {1} profile.'.format(filename, profile))
+    print('Your new access key pair has been stored in the AWS configuration file {0} under the {1} profile.'.format(credential_filename, profile))
     print('Note that it will expire at {0}.'.format(saml_expiration))
     print('After this time, you may safely rerun this script to refresh your access key pair.')
     print('If you specified a credential other than default, to use this credential, call the AWS CLI with the --profile option (e.g. aws --profile {0} ec2 describe-instances).'.format(profile))
     print('----------------------------------------------------------------\n\n')
+
 
 plac.call(login)
