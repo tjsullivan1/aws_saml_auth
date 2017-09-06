@@ -34,8 +34,7 @@ sslverification = True
 idpentryurl = 'https://adfs.stthomas.edu/adfs/ls/IdpInitiatedSignOn.aspx?loginToRp=urn:amazon:webservices'
 
 # Uncomment to enable low level debugging
-logging.basicConfig(filename='aws_saml_auth.log', level=logging.DEBUG,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+# logging.basicConfig(filename='aws_saml_auth.log', level=logging.DEBUG,format='%(asctime)s - %(levelname)s - %(message)s')
 
 ##########################################################################
 
