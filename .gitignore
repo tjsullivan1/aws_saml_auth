@@ -43,6 +43,7 @@ setup/*
 
 # Other files
 account.json
+account_ids.txt
 crash.log
 
 ## System generated files
