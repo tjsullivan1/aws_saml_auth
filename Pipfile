@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+"boto3" = "*"
+"bs4" = "*"
+awscli = "*"
+requests = "*"
+configparser = "*"
+lxml = "*"
+plac = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.6"
