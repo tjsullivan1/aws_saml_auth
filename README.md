@@ -31,6 +31,8 @@ N/A for now.
     * Initial GitHub relase. Works with several parameters.
 * 1.1.0
     * Added function to ingest an id file and convert the mapping into friendly names.
+* 1.2.0
+    * Added session duration to the SAML token request to be able to take advantage of longer maximum session durations.
 
 ## Meta
 

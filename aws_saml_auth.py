@@ -85,6 +85,7 @@ def return_friendly_name_from_file(saml_role_response, filename):
 
 
 def login(username: ("Your user-principal-name", 'option', 'u'),
+          duration: ("The session duration of the token in hours", 'option', 'd')=1,
           profile: ("The name of the profile we want to put it the credential file", 'option', 'p')='default',
           region: ("The AWS region", 'option', 'r')='us-east-2',
           filename: ("The filename that contains a comma separated mapping of account ids to friendly names",
@@ -226,9 +227,11 @@ def login(username: ("Your user-principal-name", 'option', 'u'),
         principal_arn = awsroles[0].split(',')[1]
 
     # Use the assertion to get an AWS STS token using Assume Role with SAML
+    seconds = float(duration) * 3600
     conn = boto3.client('sts')
     token = conn.assume_role_with_saml(
-        RoleArn=role_arn, PrincipalArn=principal_arn, SAMLAssertion=assertion)
+        RoleArn=role_arn, PrincipalArn=principal_arn,
+        SAMLAssertion=assertion, DurationSeconds=int(seconds))
 
     # Write the AWS STS token into the AWS credential file
     os_home = '~'
