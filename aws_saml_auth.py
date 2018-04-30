@@ -87,7 +87,7 @@ def return_friendly_name_from_file(saml_role_response, filename):
 def login(username: ("Your user-principal-name", 'option', 'u'),
           duration: ("The session duration of the token in hours", 'option', 'd')=1,
           profile: ("The name of the profile we want to put it the credential file", 'option', 'p')='default',
-          region: ("The AWS region", 'option', 'r')='us-east-2',
+          region: ("The AWS region", 'option', 'r')='us-east-1',
           filename: ("The filename that contains a comma separated mapping of account ids to friendly names",
                      'option', 'f')='account_ids.txt'):
     """login function"""
