@@ -33,6 +33,8 @@ N/A for now.
     * Added function to ingest an id file and convert the mapping into friendly names.
 * 1.2.0
     * Added session duration to the SAML token request to be able to take advantage of longer maximum session durations.
+* 1.2.1
+    * Demoing git
 
 ## Meta
 
